@@ -1,0 +1,37 @@
+name: counseling_app
+description: Anonymous Student Counseling Mobile Application
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Firebase Core
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_messaging: ^14.7.9
+  firebase_analytics: ^10.7.4
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # UI
+  cupertino_icons: ^1.0.2
+  
+  # Utilities
+  intl: ^0.18.1
+  uuid: ^4.2.2
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

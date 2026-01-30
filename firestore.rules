@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get user role
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Messages - only sender and receiver can access
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid == resource.data.receiverId);
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.senderId;
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.receiverId;
+    }
+    
+    // Sessions - only assigned student and psychiatrist can access
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == resource.data.studentId || 
+         request.auth.uid == resource.data.psychiatristId ||
+         getUserRole() == 'administrator');
+      allow create: if isAuthenticated() && 
+        getUserRole() == 'psychiatrist';
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.psychiatristId;
+    }
+    
+    // Assignments - restricted access
+    match /assignments/{assignmentId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == resource.data.studentId || 
+         request.auth.uid == resource.data.psychiatristId ||
+         getUserRole() == 'administrator');
+      allow write: if isAuthenticated() && 
+        getUserRole() == 'administrator';
+    }
+    
+    // Groups - all authenticated users can read, moderators can write
+    match /groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        (getUserRole() == 'psychiatrist' || getUserRole() == 'administrator');
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.moderatorId;
+    }
+    
+    // Follow-ups
+    match /followUps/{followUpId} {
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == resource.data.studentId || 
+         request.auth.uid == resource.data.psychiatristId);
+      allow write: if isAuthenticated() && 
+        getUserRole() == 'psychiatrist';
+    }
+  }
+}
